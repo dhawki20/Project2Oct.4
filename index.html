@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Nick Hawkins' machine-learning analysis of MLB playoff teams and World Series winners, 2005–2024.">
+  <title>Predicting World Series Winners | Nick Hawkins</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="hero">
+    <nav class="nav" aria-label="Primary navigation">
+      <a class="brand" href="#top">Nick Hawkins</a>
+      <div class="nav-links">
+        <a href="#project">Project</a><a href="#results">Results</a><a href="#reflection">Reflection</a>
+        <a class="button small" href="https://github.com/dhawki20/Project2Oct.4">View code on GitHub</a>
+      </div>
+    </nav>
+    <div class="hero-content" id="top">
+      <p class="eyebrow">DTSC 2301 · Machine-Learning Portfolio Project</p>
+      <h1>Can regular-season numbers predict the World Series winner?</h1>
+      <p class="lede">I studied 198 MLB playoff team-seasons from 2005–2024 to test whether win percentage, run differential, hitting, pitching, and baserunning statistics can identify the eventual champion.</p>
+      <div class="actions">
+        <a class="button" href="notebooks/world_series_prediction.ipynb">Open the Jupyter Notebook</a>
+        <a class="button secondary" href="data/mlb_playoff_teams_2005_2024.csv">Download the cleaned data</a>
+      </div>
+      <div class="stat-row" aria-label="Project summary">
+        <div><strong>20</strong><span>MLB seasons</span></div>
+        <div><strong>198</strong><span>playoff team-seasons</span></div>
+        <div><strong>20</strong><span>World Series winners</span></div>
+        <div><strong>2</strong><span>trained models</span></div>
+      </div>
+    </div>
+  </header>
+
+  <main id="project">
+    <section class="section two-col">
+      <div>
+        <p class="section-label">01 · Problem definition</p>
+        <h2>Research question</h2>
+      </div>
+      <div>
+        <blockquote>How accurately can an MLB playoff team’s regular-season win percentage and performance statistics predict whether it will win the World Series, using data from the 2005–2024 MLB seasons?</blockquote>
+        <p>This is a binary-classification problem. Each observation represents one playoff team in one season. The target equals 1 for the World Series champion and 0 for every other playoff team. Fans and analysts may benefit from understanding which regular-season signals carry into October, but this project is educational—not gambling advice.</p>
+      </div>
+    </section>
+
+    <section class="section tinted">
+      <p class="section-label">02 · Background and context</p>
+      <h2>Strong teams have an advantage, not a guarantee</h2>
+      <p>Win percentage summarizes a team’s full regular season. Run differential adds context by comparing runs scored with runs allowed, a relationship long connected to team quality through baseball’s Pythagorean expectation. OPS combines on-base percentage and slugging percentage into one measure of offensive production. Still, postseason series are short, rosters change, and MLB expanded the playoff field during this period. Those factors make the champion difficult to predict from season totals alone.</p>
+    </section>
+
+    <section class="section">
+      <p class="section-label">03 · Data description</p>
+      <h2>One row per playoff team-season</h2>
+      <div class="cards">
+        <article class="card"><h3>Source</h3><p>Sean Lahman’s Baseball Database team table, assembled from two credited GitHub snapshots and limited to 2005–2024.</p></article>
+        <article class="card"><h3>Target</h3><p><code>world_series_winner</code>: 1 if the team won the World Series and 0 otherwise.</p></article>
+        <article class="card"><h3>Features</h3><p>Win percentage, run differential per game, runs per game, OPS, home runs per game, stolen bases per game, ERA, and WHIP.</p></article>
+        <article class="card"><h3>Class balance</h3><p>20 winners and 178 non-winners. This imbalance makes accuracy alone misleading.</p></article>
+      </div>
+    </section>
+
+    <section class="section two-col">
+      <div>
+        <p class="section-label">04 · Data understanding</p>
+        <h2>Champions were stronger on average, but the groups overlapped</h2>
+        <p>Champions averaged a <strong>.597</strong> regular-season winning percentage; other playoff teams averaged <strong>.576</strong>. The difference supports the basic idea that stronger regular-season teams have an advantage. The wide overlap also shows why win percentage cannot determine October results by itself.</p>
+      </div>
+      <figure>
+        <img src="assets/images/win_pct_by_outcome.png" alt="Box plot comparing regular-season win percentage for World Series winners and other playoff teams.">
+        <figcaption>Regular-season win percentage by championship outcome.</figcaption>
+      </figure>
+    </section>
+
+    <section class="section tinted">
+      <figure class="wide-figure">
+        <img src="assets/images/win_pct_run_diff.png" alt="Scatterplot of regular-season win percentage and run differential per game, highlighting World Series winners.">
+        <figcaption>Champions tend to appear among stronger teams, but they overlap heavily with other playoff clubs.</figcaption>
+      </figure>
+    </section>
+
+    <section class="section">
+      <p class="section-label">05 · Preparation and feature selection</p>
+      <h2>Cleaning choices were designed to avoid leakage</h2>
+      <ol class="steps">
+        <li><strong>Removed duplicate team-season rows</strong> using season and team ID.</li>
+        <li><strong>Selected playoff teams</strong> using division, wild-card, league-champion, and World Series flags.</li>
+        <li><strong>Created rate statistics</strong> so the 60-game 2020 season could be compared with full seasons.</li>
+        <li><strong>Calculated OPS and WHIP</strong> from their component statistics.</li>
+        <li><strong>Excluded postseason results from the features.</strong> Division rank, league-champion status, and World Series status could leak information.</li>
+        <li><strong>Handled missing values inside each model pipeline</strong> using training-set medians.</li>
+      </ol>
+    </section>
+
+    <section class="section two-col">
+      <div>
+        <p class="section-label">06 · Training and models</p>
+        <h2>A chronological test</h2>
+        <p>The training set contains the 2005–2019 seasons (136 playoff teams). The untouched test set contains 2020–2024 (62 playoff teams). Keeping entire seasons together prevents same-season information from appearing on both sides of the split.</p>
+      </div>
+      <div class="model-list">
+        <div><span>Baseline</span><strong>Best regular-season win percentage</strong></div>
+        <div><span>Model 1</span><strong>Logistic regression</strong></div>
+        <div><span>Model 2</span><strong>Random forest</strong></div>
+      </div>
+    </section>
+
+    <section class="section tinted" id="results">
+      <p class="section-label">07 · Evaluation and selection</p>
+      <h2>The simple baseline was hardest to beat</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Method</th><th>Balanced accuracy</th><th>Precision</th><th>Recall</th><th>F1</th><th>ROC-AUC</th><th>PR-AUC</th></tr></thead>
+          <tbody>
+            <tr class="best"><td>Best-win-% baseline</td><td>.674</td><td>.400</td><td>.400</td><td>.400</td><td>.663</td><td>.344</td></tr>
+            <tr><td>Logistic regression</td><td>.565</td><td>.200</td><td>.200</td><td>.200</td><td>.691</td><td>.204</td></tr>
+            <tr><td>Random forest</td><td>.456</td><td>.000</td><td>.000</td><td>.000</td><td>.635</td><td>.150</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="result-callout"><strong>Main result:</strong> The baseline correctly selected 2 of 5 champions. Logistic regression selected 1 of 5, and random forest selected none. Logistic regression had the highest ROC-AUC (.691), showing some ranking signal, but added complexity did not beat the simple rule when choosing one champion per season.</p>
+      <figure class="wide-figure"><img src="assets/images/model_comparison.png" alt="Bar chart comparing balanced accuracy, ROC-AUC, and precision-recall AUC for the baseline and two models."><figcaption>Holdout performance across the 2020–2024 seasons.</figcaption></figure>
+    </section>
+
+    <section class="section two-col">
+      <div>
+        <p class="section-label">08 · Interpretation</p>
+        <h2>Regular-season statistics contain signal, but October remains noisy</h2>
+        <p>I select logistic regression as the final trained model because it produced the strongest overall ranking and is easier to explain than the random forest. However, the best-win-percentage baseline remains the better practical rule in this five-season test. Feature values describe associations, not causes, and correlated inputs can make individual coefficients unstable.</p>
+        <p>The confusion matrix shows the difficulty directly: logistic regression found only one actual champion while producing four incorrect champion selections.</p>
+      </div>
+      <figure><img src="assets/images/confusion_matrix.png" alt="Confusion matrix for logistic regression predictions on 2020 through 2024 playoff teams."><figcaption>Logistic-regression classifications using one predicted champion per season.</figcaption></figure>
+    </section>
+
+    <section class="section tinted" id="reflection">
+      <p class="section-label">09 · Limitations, ethics, and reflection</p>
+      <h2>What this model cannot tell us</h2>
+      <div class="cards three">
+        <article class="card"><h3>Small positive class</h3><p>Twenty seasons supply only 20 champions. One or two seasons can materially change the reported metrics.</p></article>
+        <article class="card"><h3>Changing conditions</h3><p>The shortened 2020 schedule and changing postseason formats affect comparability even after converting totals to rates.</p></article>
+        <article class="card"><h3>Missing context</h3><p>Season totals omit injuries, roster changes, rotation availability, matchups, travel, and short-series randomness.</p></article>
+      </div>
+      <p>Incorrect predictions could mislead fans or bettors, so this model should not support gambling, financial, or personnel decisions. My biggest takeaway is that a model can be technically sound and still fail to improve on a simple baseline. Reporting that failure honestly is more useful than overstating the result.</p>
+    </section>
+
+    <section class="section">
+      <p class="section-label">10 · Code, citations, and transparency</p>
+      <h2>Reproduce the analysis</h2>
+      <div class="actions dark-actions">
+        <a class="button" href="notebooks/world_series_prediction.ipynb">Jupyter Notebook</a>
+        <a class="button secondary" href="https://github.com/dhawki20/Project2Oct.4">GitHub repository</a>
+        <a class="button secondary" href="analysis.py">Python analysis script</a>
+      </div>
+      <h3>References</h3>
+      <ul class="references">
+        <li>Lahman, S. (2025). <em>Sean Lahman Baseball Database</em>. Society for American Baseball Research. <a href="https://sabr.org/lahman-database/">https://sabr.org/lahman-database/</a></li>
+        <li>Major League Baseball. (n.d.). <em>On-base plus slugging (OPS)</em>. MLB Glossary. <a href="https://www.mlb.com/glossary/standard-stats/on-base-plus-slugging">https://www.mlb.com/glossary/standard-stats/on-base-plus-slugging</a></li>
+        <li>Major League Baseball. (n.d.). <em>MLB’s postseason format, explained</em>. <a href="https://www.mlb.com/news/mlb-playoff-format-faq">https://www.mlb.com/news/mlb-playoff-format-faq</a></li>
+        <li>Sports Reference. (2021). <em>Pythagorean theorem of baseball</em>. BR Bullpen. <a href="https://www.baseball-reference.com/bullpen/Pythagorean_Theorem_of_Baseball">https://www.baseball-reference.com/bullpen/Pythagorean_Theorem_of_Baseball</a></li>
+        <li>Ferguson, D. (2021). <em>Lahman Teams.csv snapshot</em> [Data set]. GitHub. <a href="https://github.com/donald-f-ferguson/W4111F21/blob/main/Examples/LahmansBaseball/Data/CSV/core/Teams.csv">Historical data source</a>.</li>
+        <li>AcroTaken. (2025). <em>Baseball-Stats Teams.csv</em> [Data set]. GitHub. <a href="https://github.com/AcroTaken/Baseball-Stats/blob/main/data/Teams.csv">Recent data source</a>.</li>
+      </ul>
+      <div class="disclosure">
+        <h3>Generative AI disclosure</h3>
+        <p><strong>Tool:</strong> OpenAI ChatGPT/Codex, GPT-5 family (accessed September 2026). <strong>Purpose:</strong> assistance with code organization, debugging, explanatory drafting, and website formatting. Nick Hawkins selected the topic, reviewed the analysis, and is responsible for verifying and explaining the work. AI was not used as a data source; the numerical results were produced by the Python code in this repository.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer><p>Created by Nick Hawkins · DTSC 2301 · 2026</p><a href="https://github.com/dhawki20/Project2Oct.4">GitHub</a></footer>
+</body>
+</html>
