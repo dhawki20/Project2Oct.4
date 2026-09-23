@@ -126,11 +126,11 @@ def fit_and_evaluate(df):
 
 def make_figures(df, test, results, predictions, importance):
     sns.set_theme(style="whitegrid", context="talk")
-    green, gold, navy = "#007A33", "#FFB612", "#1f2937"
+    red, navy, gray = "#CE1141", "#13274F", "#7C879E"
 
     plt.figure(figsize=(9, 6))
-    sns.boxplot(data=df, x="world_series_winner", y="win_pct", color=green)
-    sns.stripplot(data=df, x="world_series_winner", y="win_pct", color=gold, alpha=.6, jitter=.18)
+    sns.boxplot(data=df, x="world_series_winner", y="win_pct", color=navy)
+    sns.stripplot(data=df, x="world_series_winner", y="win_pct", color=red, alpha=.65, jitter=.18)
     plt.xticks([0, 1], ["Other playoff teams", "World Series winners"])
     plt.xlabel("")
     plt.ylabel("Regular-season win percentage")
@@ -140,7 +140,7 @@ def make_figures(df, test, results, predictions, importance):
     plt.close()
 
     plt.figure(figsize=(9, 6))
-    sns.scatterplot(data=df, x="win_pct", y="run_diff_per_game", hue="world_series_winner", palette={0: navy, 1: gold}, s=90, alpha=.78)
+    sns.scatterplot(data=df, x="win_pct", y="run_diff_per_game", hue="world_series_winner", palette={0: navy, 1: red}, s=90, alpha=.78)
     plt.xlabel("Regular-season win percentage")
     plt.ylabel("Run differential per game")
     plt.title("Champions overlap heavily with other playoff teams")
@@ -150,7 +150,7 @@ def make_figures(df, test, results, predictions, importance):
     plt.close()
 
     plot = results.set_index("model")[["balanced_accuracy", "roc_auc", "pr_auc"]]
-    plot.plot(kind="bar", figsize=(10, 6), color=[green, gold, navy])
+    plot.plot(kind="bar", figsize=(10, 6), color=[navy, red, gray])
     plt.ylim(0, 1)
     plt.ylabel("Score")
     plt.xlabel("")
@@ -163,7 +163,7 @@ def make_figures(df, test, results, predictions, importance):
 
     imp = importance.sort_values("random_forest_importance")
     plt.figure(figsize=(9, 6))
-    plt.barh(imp["feature"], imp["random_forest_importance"], color=green)
+    plt.barh(imp["feature"], imp["random_forest_importance"], color=red)
     plt.xlabel("Random-forest feature importance")
     plt.ylabel("")
     plt.title("Which regular-season statistics mattered most?")
@@ -178,7 +178,7 @@ def make_figures(df, test, results, predictions, importance):
     logit_class.loc[chosen] = 1
     cm = confusion_matrix(test["world_series_winner"], logit_class)
     plt.figure(figsize=(6, 5))
-    sns.heatmap(cm, annot=True, fmt="d", cmap=sns.light_palette(green, as_cmap=True), cbar=False)
+    sns.heatmap(cm, annot=True, fmt="d", cmap=sns.light_palette(red, as_cmap=True), cbar=False)
     plt.xlabel("Predicted class")
     plt.ylabel("Actual class")
     plt.xticks([.5, 1.5], ["Non-winner", "Winner"])
